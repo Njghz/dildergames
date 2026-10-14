@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 
 const prisma = new PrismaClient();
 
@@ -13,10 +14,33 @@ const prisma = new PrismaClient();
  * или через админ-панель (фильтр «Тестовые» → удалить).
  */
 
+/**
+ * Генерирует случайный пароль администратора, если SEED_ADMIN_PASSWORD
+ * не задан. Предсказуемого пароля по умолчанию в репозитории больше нет:
+ * прежний дефолт удалён, так как репозиторий публичный.
+ */
+function generateAdminPassword(): string {
+  const alphabet =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#%*_-";
+  let password = "";
+  while (password.length < 20) {
+    const bytes = randomBytes(64);
+    for (const b of bytes) {
+      if (password.length >= 20) break;
+      // Отбрасываем края диапазона, чтобы не было смещения по модулю
+      if (b < 256 - (256 % alphabet.length)) {
+        password += alphabet[b % alphabet.length];
+      }
+    }
+  }
+  return password;
+}
+
 async function main() {
   // ===== 1. Администратор =====
   const email = process.env.SEED_ADMIN_EMAIL ?? "admin@nexus.gg";
-  const password = process.env.SEED_ADMIN_PASSWORD ?? "admin12345";
+  const passwordFromEnv = Boolean(process.env.SEED_ADMIN_PASSWORD);
+  const password = process.env.SEED_ADMIN_PASSWORD ?? generateAdminPassword();
 
   const existingAdmin = await prisma.admin.findUnique({ where: { email } });
   if (!existingAdmin) {
@@ -28,6 +52,11 @@ async function main() {
       },
     });
     console.log(`✓ Администратор создан: ${email}`);
+    if (!passwordFromEnv) {
+      console.log("  SEED_ADMIN_PASSWORD не задан — пароль сгенерирован:");
+      console.log(`  ${password}`);
+      console.log("  Сохраните его: больше он нигде не отображается.");
+    }
   } else {
     console.log(`• Администратор ${email} уже существует`);
   }
