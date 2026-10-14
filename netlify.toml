@@ -1,0 +1,13 @@
+# Конфигурация деплоя на Netlify.
+# Без этого файла Netlify мог отдавать 404: Next.js работает на сервере
+# и требует правильной publish-директории (.next).
+
+[build]
+  # prisma db push применяет схему к облачной БД при каждой сборке.
+  # Если DATABASE_URL не задан — сборка упадёт с явной ошибкой,
+  # вместо криптичного "server-side exception" в рантайме.
+  command = "npx prisma db push && next build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
