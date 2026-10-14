@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Администратор маркетплейса (единственный продавец)
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  activities   AdminActivity[]
+}
+
+/// Активность посетителя (анонимная) — для счётчика «онлайн»
+model VisitorActivity {
+  id         String   @id @default(cuid())
+  token      String   @unique // анонимный токен из cookie (UUID)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([lastSeenAt])
+}
+
+/// Активность администратора: одна запись = одна браузерная сессия.
+/// Хранится только sha256-хэш токена сессии — сам токен в базу не попадает.
+model AdminActivity {
+  id         String   @id @default(cuid())
+  adminId    String
+  admin      Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  sessionKey String   @unique // sha256(токен сессии)
+  userAgent  String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([lastSeenAt])
+}
+
+/// Игра в каталоге (Minecraft, GTA V, CS2 и т.д.)
+model Game {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  description String     @default("")
+  image       String?
+  isPopular   Boolean    @default(false)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  products    Product[]
+  categories  Category[]
+
+  @@index([isPopular])
+}
+
+/// Категория товаров внутри игры (Аккаунты, Валюта, Предметы, Услуги)
+model Category {
+  id        String   @id @default(cuid())
+  slug      String
+  name      String
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products  Product[]
+
+  @@unique([slug, gameId])
+}
+
+/// Товар администратора
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  price       Int      // цена в рублях
+  oldPrice    Int?     // старая цена для отображения скидки
+  image       String?
+  stock       Int      @default(0) // количество в наличии; 0 = нет в наличии
+  isPopular   Boolean  @default(false)
+  isHidden    Boolean  @default(false) // скрыт из публичного каталога
+  isTest      Boolean  @default(false) // демонстрационный товар
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      OrderItem[]
+
+  @@index([gameId])
+  @@index([categoryId])
+  @@index([isHidden])
+  @@index([isPopular])
+}
+
+/// Заказ покупателя
+model Order {
+  id          String      @id @default(cuid())
+  number      String      @unique // человекочитаемый номер, напр. NX-2026-0001
+  customerName String     @default("")
+  contact     String      // Telegram (@login) или e-mail
+  comment     String?
+  status      OrderStatus @default(NEW)
+  total       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// Позиция заказа (товар + количество + цена на момент заказа)
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  title     String  // название товара на момент заказа
+  price     Int     // цена на момент заказа (защита от изменений)
+  quantity  Int     @default(1)
+
+  @@index([orderId])
+}
+
+enum OrderStatus {
+  NEW
+  AWAITING_PAYMENT
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

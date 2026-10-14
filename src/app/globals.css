@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-nexus-950 text-slate-200 antialiased;
+  }
+
+  ::selection {
+    @apply bg-violet-500/40 text-white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-nexus-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-nexus-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-nexus-500;
+  }
+}
+
+@layer components {
+  .container-nexus {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500/50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-900/40 hover:from-violet-500 hover:to-blue-500 hover:shadow-violet-800/50 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn border border-nexus-600 bg-nexus-800 text-slate-200 hover:border-violet-500/50 hover:bg-nexus-700 active:scale-[0.98];
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600/90 text-white hover:bg-red-500 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn text-slate-300 hover:bg-nexus-800 hover:text-white;
+  }
+
+  .card {
+    @apply rounded-2xl border border-nexus-700/60 bg-nexus-850 shadow-xl shadow-black/20;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-nexus-600 bg-nexus-800 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 transition-colors focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-300;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-violet {
+    @apply badge bg-violet-500/15 text-violet-300 ring-1 ring-inset ring-violet-500/30;
+  }
+
+  .badge-blue {
+    @apply badge bg-blue-500/15 text-blue-300 ring-1 ring-inset ring-blue-500/30;
+  }
+
+  .badge-green {
+    @apply badge bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30;
+  }
+
+  .badge-red {
+    @apply badge bg-red-500/15 text-red-300 ring-1 ring-inset ring-red-500/30;
+  }
+
+  .badge-amber {
+    @apply badge bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-500/30;
+  }
+
+  .badge-gray {
+    @apply badge bg-slate-500/15 text-slate-300 ring-1 ring-inset ring-slate-500/30;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400 bg-clip-text text-transparent;
+  }
+
+  .hero-glow {
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 0%, rgba(124, 58, 237, 0.18), transparent),
+      radial-gradient(ellipse 50% 40% at 80% 10%, rgba(59, 130, 246, 0.14), transparent);
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-nexus-800;
+  }
+}
