@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/db";
-import { loginSchema } from "@/lib/validation";
-import { createSession } from "@/lib/auth";
+import { passwordSchema } from "@/lib/validation";
+import { verifyAdminPassword, createSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-/** Лимит попыток входа (простая защита от перебора) */
+/** Лимит попыток входа (защита от перебора) */
 const attempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -39,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Некорректный формат запроса" }, { status: 400 });
   }
 
-  const parsed = loginSchema.safeParse(body);
+  const parsed = passwordSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Некорректные данные" },
@@ -47,24 +45,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { email, password } = parsed.data;
+  const { password } = parsed.data;
 
-  // Ищем администратора. Сравнение пароля всегда выполняем,
-  // даже если пользователь не найден (защита от timing-атак).
-  const admin = await prisma.admin.findUnique({ where: { email } });
-  const hash = admin?.passwordHash ?? "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinv";
-  const ok = await bcrypt.compare(password, hash);
-
-  if (!admin || !ok) {
+  // Пароль проверяется на сервере против ADD_PASSWORD (timing-safe).
+  // При несовпадении всегда возвращаем одинаковый ответ и статус.
+  if (!verifyAdminPassword(password)) {
     return NextResponse.json(
-      { error: "Неверный e-mail или пароль" },
+      { error: "Неверный пароль" },
       { status: 401 }
     );
   }
 
-  await createSession(admin.id, admin.email);
+  await createSession();
 
-  return NextResponse.json({
-    admin: { id: admin.id, email: admin.email, name: admin.name },
-  });
+  // В ответ не отправляется ни пароль, ни токен — только httpOnly cookie.
+  return NextResponse.json({ ok: true });
 }

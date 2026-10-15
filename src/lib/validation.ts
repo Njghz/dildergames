@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-/** Валидация формы входа администратора */
-export const loginSchema = z.object({
-  email: z.string().email("Введите корректный e-mail"),
+/** Валидация формы входа администратора (только пароль) */
+export const passwordSchema = z.object({
   password: z.string().min(1, "Введите пароль"),
 });
 
@@ -69,7 +68,7 @@ export const categorySchema = z.object({
   sortOrder: z.number().int().min(0).default(0),
 });
 
-export type LoginInput = z.infer<typeof loginSchema>;
+export type LoginInput = z.infer<typeof passwordSchema>;
 export type OrderInput = z.infer<typeof orderSchema>;
 export type ProductInput = z.infer<typeof productSchema>;
 export type GameInput = z.infer<typeof gameSchema>;

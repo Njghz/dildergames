@@ -6,7 +6,6 @@ import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +19,7 @@ function LoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ password }),
       });
       const data = await res.json();
 
@@ -50,20 +49,6 @@ function LoginForm() {
         <p className="mt-1 text-sm text-slate-500">
           DilderGames · Панель управления
         </p>
-      </div>
-
-      <div>
-        <label htmlFor="email" className="label">E-mail</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-          placeholder="admin@dildergames.gg"
-          className="input"
-        />
       </div>
 
       <div>
